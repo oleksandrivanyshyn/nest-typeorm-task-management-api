@@ -1,8 +1,13 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 
 @Controller('tasks')
 export class TasksController {
-    findAll(): string[]{
-        return ['A', 'B'];
-    }
+  @Get()
+  findAll(): string[] {
+    return ['A', 'B'];
+  }
+  @Get('/:id')
+  findOne(@Param() id: string): string {
+    return `Task ${id}`;
+  }
 }
