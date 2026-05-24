@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { CreateTaskDto } from './create-task.dto';
 import { ITask, TaskStatus } from './task.model';
 import { Injectable } from '@nestjs/common';
+import { UpdateTaskDto } from './update-task.dto';
 
 @Injectable()
 export class TasksService {
@@ -21,6 +22,10 @@ export class TasksService {
       ...createTaskDto,
     };
     this.tasks.push(task);
+    return task;
+  }
+  public updateTask(task: ITask, updateTaskDto: UpdateTaskDto): ITask {
+    Object.assign(task, updateTaskDto);
     return task;
   }
 
