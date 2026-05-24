@@ -1,4 +1,11 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+} from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import type { ITask } from './task.model';
 import { CreateTaskDto } from './create-task.dto';
@@ -11,7 +18,7 @@ export class TasksController {
     return this.tasksService.findAll();
   }
   @Get(':id')
-  findOne(@Param('id') id: string): ITask | undefined {
+  findOne(@Param('id', ParseUUIDPipe) id: string): ITask | undefined {
     return this.tasksService.findOne(id);
   }
   @Post()
