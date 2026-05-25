@@ -1,3 +1,4 @@
+import { Task } from '../tasks/task.entity';
 import {
   Column,
   CreateDateColumn,
@@ -6,7 +7,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Task } from '../tasks/task.entity';
 
 @Entity()
 export class User {
@@ -18,6 +18,9 @@ export class User {
 
   @Column()
   email: string;
+
+  @Column()
+  password: string;
 
   @CreateDateColumn()
   createdAt: Date;
