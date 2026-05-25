@@ -1,4 +1,4 @@
-import { PaginationParams } from './../common/pagination.params';
+import { PaginationParams } from '../common/pagination.params';
 import { CreateTaskDto } from './create-task.dto';
 import { TaskStatus } from './task.model';
 import { Injectable } from '@nestjs/common';
@@ -37,6 +37,10 @@ export class TasksService {
         '(task.title ILIKE :search OR task.description ILIKE :search)',
         { search: `%${filters.search}%` },
       );
+    }
+
+    if (filters.labels?.length) {
+      query.andWhere('labels.name IN (:...names)', { names: filters.labels });
     }
 
     query.skip(pagination.offset).take(pagination.limit);
