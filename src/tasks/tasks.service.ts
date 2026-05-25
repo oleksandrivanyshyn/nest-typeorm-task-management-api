@@ -8,6 +8,8 @@ import { Task } from './task.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateTaskLabelDto } from './create-task-label.dto';
 import { TaskLabel } from './task-label.entity';
+import { FindTaskParams } from './find-task.params';
+import { PaginationParams } from '../common/pagination.params';
 
 @Injectable()
 export class TasksService {
@@ -18,8 +20,18 @@ export class TasksService {
     private readonly labelsRepository: Repository<TaskLabel>,
   ) {}
 
-  public async findAll(): Promise<Task[]> {
-    return await this.tasksRepository.find();
+  public async findAll(
+    filters: FindTaskParams,
+    pagination: PaginationParams,
+  ): Promise<[Task[], number]> {
+    return await this.tasksRepository.findAndCount({
+      where: { status: filters.status },
+      relations: {
+        labels: true,
+      },
+      skip: pagination.offset,
+      take: pagination.limit,
+    });
   }
 
   public async findOne(id: string): Promise<Task | null> {
@@ -27,6 +39,9 @@ export class TasksService {
   }
 
   public async createTask(createTaskDto: CreateTaskDto): Promise<Task> {
+    if (createTaskDto.labels) {
+      createTaskDto.labels = this.getUniqueLabels(createTaskDto.labels);
+    }
     return await this.tasksRepository.save(createTaskDto);
   }
 
@@ -48,11 +63,21 @@ export class TasksService {
     task: Task,
     labelDtos: CreateTaskLabelDto[],
   ): Promise<Task> {
-    const labels = labelDtos.map((label) =>
-      this.labelsRepository.create(label),
-    );
-    task.labels = [...task.labels, ...labels];
-    return await this.tasksRepository.save(task);
+    // 1) Deduplicate DTOs - DONE
+    // 2) Get existing names - DONE
+    // 3) New labels aren't already exisitng ones - DONE
+    // 4) We save new ones, only if there are any real new ones - DONE
+    const names = new Set(task.labels.map((label) => label.name));
+    const labels = this.getUniqueLabels(labelDtos)
+      .filter((dto) => !names.has(dto.name))
+      .map((label) => this.labelsRepository.create(label));
+
+    if (labels.length) {
+      task.labels = [...task.labels, ...labels];
+      return await this.tasksRepository.save(task);
+    }
+
+    return task;
   }
   private isValidStatusTransition(
     currentStatus: TaskStatus,
@@ -65,8 +90,28 @@ export class TasksService {
     ];
     return statusOrder.indexOf(currentStatus) <= statusOrder.indexOf(newStatus);
   }
-
+  public async removeLabels(
+    task: Task,
+    labelsToRemove: string[],
+  ): Promise<Task> {
+    // 1.Remove existing labels from labels array
+    // 2. Ways to solve
+    //    a) Remove labels from task->labels and save() the Task
+    //    b) Query Builder - SQL that deletes labels
+    task.labels = task.labels.filter(
+      (label) => !labelsToRemove.includes(label.name),
+    );
+    return await this.tasksRepository.save(task);
+  }
   public async deleteTask(task: Task): Promise<void> {
-    await this.tasksRepository.delete(task);
+    await this.tasksRepository.remove(task);
+  }
+  private getUniqueLabels(
+    labelDtos: CreateTaskLabelDto[],
+  ): CreateTaskLabelDto[] {
+    const uniqueNames = [...new Set(labelDtos.map((label) => label.name))];
+    return uniqueNames.map((name) => ({
+      name,
+    }));
   }
 }
