@@ -14,7 +14,7 @@ import { AuthService } from './auth.service';
 import { User } from '../user.entity';
 import { LoginDto } from '../login.dto';
 import { LoginResponse } from '../login.response';
-import { AuthRequest } from '../auth.request';
+import type { AuthRequest } from '../auth.request';
 import { UserService } from '../user/user.service';
 import { Public } from '../decorators/public.decorator';
 import { AdminResponse } from '../admin.response';

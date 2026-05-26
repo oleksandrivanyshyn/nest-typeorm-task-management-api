@@ -22,7 +22,7 @@ import { RolesGuard } from './roles.guard';
       useFactory: (config: TypedConfigService) => ({
         secret: config.get<AuthConfig>('auth')?.jwt.secret,
         signOptions: {
-          expiresIn: config.get<AuthConfig>('auth')?.jwt.expiresIn,
+          expiresIn: config.get<AuthConfig>('auth')?.jwt.expiresIn as any,
         },
       }),
     }),
