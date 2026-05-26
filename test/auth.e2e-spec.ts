@@ -1,7 +1,6 @@
-import * as request from 'supertest';
+import request from 'supertest';
 import { AppModule } from './../src/app.module';
 import { TestSetup } from './utils/test-setup';
-import { HttpStatus } from '@nestjs/common';
 
 describe('AppController (e2e)', () => {
   let testSetup: TestSetup;
@@ -32,7 +31,7 @@ describe('AppController (e2e)', () => {
       .send(testUser)
       .expect(201);
     await request(testSetup.app.getHttpServer())
-      .post('auth/login')
+      .post('/auth/login')
       .send(testUser)
       .expect(201);
   });
