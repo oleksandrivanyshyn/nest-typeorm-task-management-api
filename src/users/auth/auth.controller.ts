@@ -17,6 +17,9 @@ import { LoginResponse } from '../login.response';
 import type { AuthRequest } from '../auth.request';
 import { UserService } from '../user/user.service';
 import { Public } from '../decorators/public.decorator';
+import { AdminResponse } from '../admin.response';
+import { Roles } from '../decorators/roles.decorator';
+import { Role } from '../role.enum';
 
 @Controller('auth')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -54,5 +57,10 @@ export class AuthController {
     }
 
     throw new NotFoundException();
+  }
+  @Get('admin')
+  @Roles(Role.ADMIN)
+  async adminOnly(): Promise<AdminResponse> {
+    return new AdminResponse({ message: 'This is an admin-only route' });
   }
 }

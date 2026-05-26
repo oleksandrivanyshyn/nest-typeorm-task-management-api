@@ -119,4 +119,28 @@ describe('AppController (e2e)', () => {
         expect(res.body).not.toHaveProperty('password');
       });
   });
+  it('/auth/admin (GET) - admin access', async () => {
+    const userRepo = testSetup.app.get(getRepositoryToken(User));
+
+    const passwordService = testSetup.app.get(PasswordService);
+
+    const hashedPassword = await passwordService.hash(testUser.password);
+    await userRepo.save({
+      ...testUser,
+      roles: [Role.ADMIN],
+      password: hashedPassword,
+    });
+    const response = await request(testSetup.app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: testUser.email, password: testUser.password });
+
+    const token = response.body.accessToken;
+    await request(testSetup.app.getHttpServer())
+      .get('/auth/admin')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.message).toBe('This is an admin-only route');
+      });
+  });
 });
