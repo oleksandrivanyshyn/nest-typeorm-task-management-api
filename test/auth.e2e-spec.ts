@@ -1,6 +1,11 @@
 import request from 'supertest';
 import { AppModule } from './../src/app.module';
 import { TestSetup } from './utils/test-setup';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { User } from '../src/users/user.entity';
+import { Role } from '../src/users/role.enum';
+import { PasswordService } from '../src/users/password/password.service';
+import { JwtService } from '@nestjs/jwt';
 
 describe('AppController (e2e)', () => {
   let testSetup: TestSetup;
@@ -35,6 +40,28 @@ describe('AppController (e2e)', () => {
       .send(testUser)
       .expect(201);
   });
+
+  it('should includes roles in JWT token', async () => {
+    const userRepo = testSetup.app.get(getRepositoryToken(User));
+    const passwordService = testSetup.app.get(PasswordService);
+
+    const hashedPassword = await passwordService.hash(testUser.password);
+    await userRepo.save({
+      ...testUser,
+      roles: [Role.ADMIN],
+      password: hashedPassword,
+    });
+    const response = await request(testSetup.app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: testUser.email, password: testUser.password });
+
+    const decoded = testSetup.app
+      .get(JwtService)
+      .verify(response.body.accessToken);
+
+    expect(decoded.roles).toBeDefined();
+    expect(decoded.roles).toContain(Role.ADMIN);
+  });
   it('/auth/register (POST)', () => {
     return request(testSetup.app.getHttpServer())
       .post('/auth/register')
@@ -52,7 +79,7 @@ describe('AppController (e2e)', () => {
       .post('/auth/register')
       .send(testUser);
 
-    return await request(testSetup.app.getHttpServer())
+    return request(testSetup.app.getHttpServer())
       .post('/auth/register')
       .send(testUser)
       .expect(409);
@@ -82,7 +109,7 @@ describe('AppController (e2e)', () => {
 
     const token = response.body.accessToken;
 
-    return await request(testSetup.app.getHttpServer())
+    return request(testSetup.app.getHttpServer())
       .get('/auth/profile')
       .set('Authorization', `Bearer ${token}`)
       .expect(200)
