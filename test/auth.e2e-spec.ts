@@ -1,6 +1,7 @@
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
 import { TestSetup } from './utils/test-setup';
+import { HttpStatus } from '@nestjs/common';
 
 describe('AppController (e2e)', () => {
   let testSetup: TestSetup;
@@ -22,7 +23,19 @@ describe('AppController (e2e)', () => {
     password: 'Password123!',
     name: 'Test User',
   };
-
+  it('should require auth', async () => {
+    return request(testSetup.app.getHttpServer()).get('/tasks').expect(401);
+  });
+  it('should allow public routes', async () => {
+    await request(testSetup.app.getHttpServer())
+      .post('/auth/register')
+      .send(testUser)
+      .expect(201);
+    await request(testSetup.app.getHttpServer())
+      .post('auth/login')
+      .send(testUser)
+      .expect(201);
+  });
   it('/auth/register (POST)', () => {
     return request(testSetup.app.getHttpServer())
       .post('/auth/register')
