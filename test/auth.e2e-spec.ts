@@ -140,7 +140,7 @@ describe('AppController (e2e)', () => {
       .set('Authorization', `Bearer ${token}`)
       .expect(200)
       .expect((res) => {
-        expect(res.body.message).toBe('This is an admin-only route');
+        expect(res.body.message).toBe('This is for admins only!');
       });
   });
   it('/auth/admin (GET) - regular user denied', async () => {

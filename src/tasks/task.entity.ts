@@ -1,4 +1,4 @@
-import { User } from '../users/user.entity';
+import { User } from './../users/user.entity';
 import {
   Entity,
   Column,
@@ -11,6 +11,10 @@ import {
 import { TaskStatus } from './task.model';
 import { TaskLabel } from './task-label.entity';
 
+// one-to-many
+// User that has many Tasks
+// 1) User - user - id
+// 2) Task - task - userId
 @Entity()
 export class Task {
   @PrimaryGeneratedColumn('uuid')
@@ -44,7 +48,6 @@ export class Task {
 
   @OneToMany(() => TaskLabel, (label) => label.task, {
     cascade: true,
-    orphanedRowAction: 'delete',
   })
   labels: TaskLabel[];
 

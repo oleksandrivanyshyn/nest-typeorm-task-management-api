@@ -1,10 +1,10 @@
-import { PaginationParams } from '../common/pagination.params';
+import { PaginationParams } from './../common/pagination.params';
 import { CreateTaskDto } from './create-task.dto';
 import { TaskStatus } from './task.model';
 import { Injectable } from '@nestjs/common';
 import { UpdateTaskDto } from './update-task.dto';
 import { WrongTaskStatusException } from './exceptions/wrong-task-status.exception';
-import { Repository } from 'typeorm';
+import { FindOperator, FindOptionsWhere, Like, Or, Repository } from 'typeorm';
 import { Task } from './task.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateTaskLabelDto } from './create-task-label.dto';
@@ -23,10 +23,12 @@ export class TasksService {
   public async findAll(
     filters: FindTaskParams,
     pagination: PaginationParams,
+    userId: string,
   ): Promise<[Task[], number]> {
     const query = this.tasksRepository
       .createQueryBuilder('task')
-      .leftJoinAndSelect('task.labels', 'labels');
+      .leftJoinAndSelect('task.labels', 'labels')
+      .where('task.userId = :userId', { userId });
 
     if (filters.status) {
       query.andWhere('task.status = :status', { status: filters.status });
@@ -40,8 +42,16 @@ export class TasksService {
     }
 
     if (filters.labels?.length) {
-      query.andWhere('labels.name IN (:...names)', { names: filters.labels });
+      const subQuery = query
+        .subQuery()
+        .select('labels.taskId')
+        .from('task_label', 'labels')
+        .where('labels.name IN (:...names)', { names: filters.labels })
+        .getQuery();
+
+      query.andWhere(`task.id IN ${subQuery}`);
     }
+
     query.orderBy(`task.${filters.sortBy}`, filters.sortOrder);
     query.skip(pagination.offset).take(pagination.limit);
     return query.getManyAndCount();

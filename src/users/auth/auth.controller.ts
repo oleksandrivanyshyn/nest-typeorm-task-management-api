@@ -14,7 +14,7 @@ import { AuthService } from './auth.service';
 import { User } from '../user.entity';
 import { LoginDto } from '../login.dto';
 import { LoginResponse } from '../login.response';
-import type { AuthRequest } from '../auth.request';
+import { AuthRequest } from '../auth.request';
 import { UserService } from '../user/user.service';
 import { Public } from '../decorators/public.decorator';
 import { AdminResponse } from '../admin.response';
@@ -58,9 +58,10 @@ export class AuthController {
 
     throw new NotFoundException();
   }
-  @Get('admin')
+
+  @Get('admin') // /auth/admin
   @Roles(Role.ADMIN)
   async adminOnly(): Promise<AdminResponse> {
-    return new AdminResponse({ message: 'This is an admin-only route' });
+    return new AdminResponse({ message: 'This is for admins only!' });
   }
 }
