@@ -14,6 +14,9 @@ export class InitialMigration1734459008403 implements MigrationInterface {
       `CREATE INDEX "IDX_2ed786959519e4915b874d3677" ON "task_label" ("taskId") `,
     );
     await queryRunner.query(
+      `CREATE TYPE "public"."task_status_enum" AS ENUM('OPEN', 'IN_PROGRESS', 'DONE')`,
+    );
+    await queryRunner.query(
       `CREATE TABLE "task" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "title" character varying(100) NOT NULL, "description" text NOT NULL, "status" "public"."task_status_enum" NOT NULL DEFAULT 'OPEN', "userId" uuid NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_fb213f79ee45060ba925ecd576e" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
@@ -32,6 +35,7 @@ export class InitialMigration1734459008403 implements MigrationInterface {
       `ALTER TABLE "task_label" DROP CONSTRAINT "FK_2ed786959519e4915b874d3677b"`,
     );
     await queryRunner.query(`DROP TABLE "task"`);
+    await queryRunner.query(`DROP TYPE "public"."task_status_enum"`);
     await queryRunner.query(
       `DROP INDEX "public"."IDX_2ed786959519e4915b874d3677"`,
     );

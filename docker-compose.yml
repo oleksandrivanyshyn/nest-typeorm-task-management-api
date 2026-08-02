@@ -3,18 +3,31 @@ services:
     image: postgres:16
     container_name: my_postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: tasks
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
     ports:
-      - '5432:5432'
+      - '127.0.0.1:5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres -d tasks']
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER} -d ${DB_DATABASE}']
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+
+  api:
+    build: .
+    container_name: task-api
+    env_file: .env
+    environment:
+      DB_HOST: postgres
+    ports:
+      - '80:${PORT:-3000}'
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:

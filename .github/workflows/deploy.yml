@@ -1,0 +1,67 @@
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      runner_label:
+        required: true
+        type: string
+      environment_name:
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ${{ fromJSON(format('["self-hosted","{0}"]', inputs.runner_label)) }}
+    environment: ${{ inputs.environment_name }}
+    defaults:
+      run:
+        shell: bash --noprofile --norc -eo pipefail {0}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Write .env
+        run: |
+          cat > .env << EOF
+          PORT=${{ vars.PORT }}
+          APP_MESSAGE_PREFIX=${{ vars.APP_MESSAGE_PREFIX }}
+          DB_HOST=${{ vars.DB_HOST }}
+          DB_PORT=${{ vars.DB_PORT }}
+          DB_USER=${{ vars.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_DATABASE=${{ vars.DB_DATABASE }}
+          DB_SYNC=${{ vars.DB_SYNC }}
+          DB_SSL=${{ vars.DB_SSL }}
+          JWT_TOKEN=${{ secrets.JWT_TOKEN }}
+          JWT_EXPIRES_IN=${{ vars.JWT_EXPIRES_IN }}
+          EOF
+
+      - name: Build images
+        run: docker compose build
+
+      - name: Start database
+        run: docker compose up -d postgres
+
+      - name: Run migrations
+        run: docker compose run --rm api node node_modules/typeorm/cli.js migration:run -d dist/typeorm.config.js
+
+      - name: Deploy app
+        run: |
+          docker compose up -d --force-recreate api
+          docker compose ps
+
+      - name: Smoke test
+        run: |
+          for i in $(seq 1 10); do
+            if curl -fsS "http://localhost/health"; then
+              echo "health check passed"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "health check failed after deploy"
+          exit 1
+
+      - name: Clean up old images
+        run: docker image prune -f
