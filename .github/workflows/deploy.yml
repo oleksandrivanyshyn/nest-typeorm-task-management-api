@@ -54,7 +54,7 @@ jobs:
       - name: Smoke test
         run: |
           for i in $(seq 1 10); do
-            if curl -fsS "http://localhost:${{ vars.PORT }}/health"; then
+            if curl -fsS "http://localhost/health"; then
               echo "health check passed"
               exit 0
             fi
