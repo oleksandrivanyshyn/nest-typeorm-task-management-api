@@ -2,3 +2,12 @@ node_modules
 dist
 .git
 .env
+.env.example
+coverage
+test
+ai
+*.md
+*.pdf
+Dockerfile
+docker-compose*.yml
+.github
