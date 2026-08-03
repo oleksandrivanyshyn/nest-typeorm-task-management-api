@@ -35,6 +35,8 @@ jobs:
           DB_SSL=${{ vars.DB_SSL }}
           JWT_TOKEN=${{ secrets.JWT_TOKEN }}
           JWT_EXPIRES_IN=${{ vars.JWT_EXPIRES_IN }}
+          SENTRY_DSN=${{ secrets.SENTRY_DSN }}
+          SENTRY_ENVIRONMENT=${{ vars.SENTRY_ENVIRONMENT }}
           EOF
 
       - name: Build images

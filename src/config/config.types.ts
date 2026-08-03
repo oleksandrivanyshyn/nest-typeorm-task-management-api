@@ -21,4 +21,6 @@ export const appConfigSchema = Joi.object({
   DB_SSL: Joi.boolean().default(false),
   JWT_TOKEN: Joi.string().required(),
   JWT_EXPIRES_IN: Joi.string().required(),
+  SENTRY_DSN: Joi.string().allow('').optional(),
+  SENTRY_ENVIRONMENT: Joi.string().optional(),
 });
