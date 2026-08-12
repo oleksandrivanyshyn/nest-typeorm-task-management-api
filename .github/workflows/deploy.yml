@@ -46,7 +46,7 @@ jobs:
         run: docker compose up -d postgres
 
       - name: Run migrations
-        run: docker compose run --rm api node node_modules/typeorm/cli.js migration:run -d dist/typeorm.config.js
+        run: docker compose run --rm api npm run migration:run:prod
 
       - name: Deploy app
         run: |

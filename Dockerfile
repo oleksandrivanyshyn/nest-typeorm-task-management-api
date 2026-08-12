@@ -19,8 +19,9 @@ ENV DOTENV_CONFIG_QUIET=true
 RUN chown node:node /app
 USER node
 
-COPY --chown=node:node --from=deps /app/node_modules ./node_modules
-COPY --chown=node:node --from=builder /app/dist ./dist
+COPY --chown=node:node --from=builder /app/package.json ./
+COPY --chown=node:node --from=deps    /app/node_modules ./node_modules
+COPY --chown=node:node --from=builder /app/dist         ./dist
 
 EXPOSE 3000
 
