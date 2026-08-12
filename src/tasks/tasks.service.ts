@@ -96,10 +96,6 @@ export class TasksService {
     task: Task,
     labelDtos: CreateTaskLabelDto[],
   ): Promise<Task> {
-    // 1) Deduplicate DTOs - DONE
-    // 2) Get existing names - DONE
-    // 3) New labels aren't already exisitng ones - DONE
-    // 4) We save new ones, only if there are any real new ones - DONE
     const names = new Set(task.labels.map((label) => label.name));
     const labels = this.getUniqueLabels(labelDtos)
       .filter((dto) => !names.has(dto.name))
@@ -117,10 +113,6 @@ export class TasksService {
     task: Task,
     labelsToRemove: string[],
   ): Promise<Task> {
-    // 1.Remove existing labels from labels array
-    // 2. Ways to solve
-    //    a) Remove labels from task->labels and save() the Task
-    //    b) Query Builder - SQL that deletes labels
     task.labels = task.labels.filter(
       (label) => !labelsToRemove.includes(label.name),
     );

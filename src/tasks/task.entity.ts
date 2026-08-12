@@ -11,10 +11,6 @@ import {
 import { TaskStatus } from './task.model';
 import { TaskLabel } from './task-label.entity';
 
-// one-to-many
-// User that has many Tasks
-// 1) User - user - id
-// 2) Task - task - userId
 @Entity()
 export class Task {
   @PrimaryGeneratedColumn('uuid')

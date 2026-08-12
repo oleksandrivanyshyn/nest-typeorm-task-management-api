@@ -12,20 +12,13 @@ describe('CreateUserDto', () => {
   });
 
   it('should validate complete valid data', async () => {
-    // Arrange
-    // Act
     const errors = await validate(dto);
-    // Assert
     expect(errors.length).toBe(0);
   });
 
   it('should fail on invalid email', async () => {
-    // Arrange
     dto.email = 'test';
-    // Act
     const errors = await validate(dto);
-    // Assert
-    // console.log(errors);
     expect(errors.length).toBeGreaterThan(0);
     expect(errors[0].property).toBe('email');
     expect(errors[0].constraints).toHaveProperty('isEmail');
@@ -40,9 +33,6 @@ describe('CreateUserDto', () => {
     expect(messages).toContain(message);
   };
 
-  // 1) At least 1 uppercase letter
-  // 2) At least 1 number
-  // 3) At least 1 special character
   it('should fail without 1 uppercase letter', async () => {
     await testPassword(
       'abcdef',

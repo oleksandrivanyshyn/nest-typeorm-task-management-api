@@ -35,7 +35,6 @@ import { UsersModule } from './users/users.module';
       load: [appConfig, typeOrmConfig, authConfig],
       validationSchema: appConfigSchema,
       validationOptions: {
-        // allowUnknown: false,
         abortEarly: true,
       },
     }),

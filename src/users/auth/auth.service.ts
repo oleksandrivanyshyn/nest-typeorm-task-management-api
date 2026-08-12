@@ -46,8 +46,6 @@ export class AuthService {
   public async login(email: string, password: string): Promise<string> {
     const user = await this.userService.findOneByEmail(email);
 
-    // 1) Theres no such user
-    // 2) Password is invalid
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -64,9 +62,3 @@ export class AuthService {
     return this.jwtService.sign(payload);
   }
 }
-
-// 1) User registration
-//    - Make sure does not exist yet
-//    - Store the user
-//    - (optional) generate the token
-// 2) Generating token
