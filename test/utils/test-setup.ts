@@ -2,10 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
+import { Server } from 'http';
 import { testConfig } from '../config/test.config';
 
 export class TestSetup {
-  app: INestApplication;
+  app: INestApplication<Server>;
   dataSource: DataSource;
 
   static async create(module: any) {
@@ -29,7 +30,7 @@ export class TestSetup {
       })
       .compile();
 
-    this.app = moduleFixture.createNestApplication();
+    this.app = moduleFixture.createNestApplication<INestApplication<Server>>();
     this.app.useGlobalPipes(
       new ValidationPipe({
         transform: true,
