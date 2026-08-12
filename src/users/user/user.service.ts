@@ -13,9 +13,6 @@ export class UserService {
     private readonly passwordService: PasswordService,
   ) {}
 
-  // 1) find the user by email
-  // 2) create user
-  // 3) fetch the user by id
   public async findOneByEmail(email: string): Promise<User | null> {
     return await this.userRepository.findOneBy({ email });
   }

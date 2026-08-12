@@ -4,6 +4,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './user.entity';
 import { JwtModule } from '@nestjs/jwt';
+import type { SignOptions } from 'jsonwebtoken';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PasswordService } from './password/password.service';
 import { UserService } from './user/user.service';
@@ -22,7 +23,9 @@ import { RolesGuard } from './roles.guard';
       useFactory: (config: TypedConfigService) => ({
         secret: config.get<AuthConfig>('auth')?.jwt.secret,
         signOptions: {
-          expiresIn: config.get<AuthConfig>('auth')?.jwt.expiresIn as any,
+          expiresIn: config.get<AuthConfig>('auth')?.jwt.expiresIn as
+            | SignOptions['expiresIn']
+            | undefined,
         },
       }),
     }),

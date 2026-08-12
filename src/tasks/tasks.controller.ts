@@ -21,7 +21,8 @@ import { FindOneParams } from './find-one.params';
 import { UpdateTaskDto } from './update-task.dto';
 import { WrongTaskStatusException } from './exceptions/wrong-task-status.exception';
 import { Task } from './task.entity';
-import { CreateTaskLabelDto } from './create-task-label.dto';
+import { AddLabelsDto } from './add-labels.dto';
+import { RemoveLabelsDto } from './remove-labels.dto';
 import { FindTaskParams } from './find-task.params';
 import { CurrentUserId } from './../users/decorators/current-user-id.decorator';
 
@@ -103,7 +104,7 @@ export class TasksController {
   @Post(':id/labels')
   async addLabels(
     @Param() { id }: FindOneParams,
-    @Body() labels: CreateTaskLabelDto[],
+    @Body() { labels }: AddLabelsDto,
     @CurrentUserId() userId: string,
   ): Promise<Task> {
     const task = await this.findOneOrFail(id);
@@ -115,17 +116,13 @@ export class TasksController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async removeLabels(
     @Param() { id }: FindOneParams,
-    @Body() labelNames: string[],
+    @Body() { labelNames }: RemoveLabelsDto,
     @CurrentUserId() userId: string,
   ): Promise<void> {
     const task = await this.findOneOrFail(id);
     this.checkTaskOwnership(task, userId);
     await this.tasksService.removeLabels(task, labelNames);
   }
-
-  // 1) Create an endpoint POST :id/labels
-  // 2) addLabels - mixing existing labels with new ones
-  // 3) 500 - we need a method to get unique labels to store
 
   private async findOneOrFail(id: string): Promise<Task> {
     const task = await this.tasksService.findOne(id);

@@ -8,6 +8,9 @@ import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from '../create-user.dto';
 import { User } from '../user.entity';
 import { PasswordService } from '../password/password.service';
+import { QueryFailedError } from 'typeorm';
+
+const POSTGRES_UNIQUE_VIOLATION = '23505';
 
 @Injectable()
 export class AuthService {
@@ -26,20 +29,23 @@ export class AuthService {
       throw new ConflictException('Email already exists');
     }
 
-    const user = await this.userService.createUser(createUserDto);
-
-    // 1) Return the user
-    // 2) Return the user & token
-    // 3) Return the token
-
-    return user;
+    try {
+      return await this.userService.createUser(createUserDto);
+    } catch (error) {
+      if (
+        error instanceof QueryFailedError &&
+        (error as QueryFailedError & { code?: string }).code ===
+          POSTGRES_UNIQUE_VIOLATION
+      ) {
+        throw new ConflictException('Email already exists');
+      }
+      throw error;
+    }
   }
 
   public async login(email: string, password: string): Promise<string> {
     const user = await this.userService.findOneByEmail(email);
 
-    // 1) Theres no such user
-    // 2) Password is invalid
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -56,9 +62,3 @@ export class AuthService {
     return this.jwtService.sign(payload);
   }
 }
-
-// 1) User registration
-//    - Make sure does not exist yet
-//    - Store the user
-//    - (optional) generate the token
-// 2) Generating token

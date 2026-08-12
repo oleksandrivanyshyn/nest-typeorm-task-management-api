@@ -11,7 +11,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { appConfig } from './config/app.config';
 import { appConfigSchema } from './config/config.types';
 import { typeOrmConfig } from './config/database.config';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { TypedConfigService } from './config/typed-config.service';
 import { Task } from './tasks/task.entity';
 import { User } from './users/user.entity';
@@ -25,8 +25,10 @@ import { UsersModule } from './users/users.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: TypedConfigService) => ({
-        ...configService.get('database'),
+      useFactory: (
+        configService: TypedConfigService,
+      ): TypeOrmModuleOptions => ({
+        ...configService.get('database', { infer: true }),
         entities: [Task, User, TaskLabel],
       }),
     }),
@@ -35,7 +37,6 @@ import { UsersModule } from './users/users.module';
       load: [appConfig, typeOrmConfig, authConfig],
       validationSchema: appConfigSchema,
       validationOptions: {
-        // allowUnknown: false,
         abortEarly: true,
       },
     }),

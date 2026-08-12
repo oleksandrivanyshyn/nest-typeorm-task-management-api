@@ -1,4 +1,5 @@
 import request from 'supertest';
+import { Repository } from 'typeorm';
 import { AppModule } from './../src/app.module';
 import { TestSetup } from './utils/test-setup';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -6,6 +7,9 @@ import { User } from '../src/users/user.entity';
 import { Role } from '../src/users/role.enum';
 import { PasswordService } from '../src/users/password/password.service';
 import { JwtService } from '@nestjs/jwt';
+import { LoginResponse } from '../src/users/login.response';
+import { AdminResponse } from '../src/users/admin.response';
+import { AuthRequest } from '../src/users/auth.request';
 
 describe('AppController (e2e)', () => {
   let testSetup: TestSetup;
@@ -42,7 +46,9 @@ describe('AppController (e2e)', () => {
   });
 
   it('should includes roles in JWT token', async () => {
-    const userRepo = testSetup.app.get(getRepositoryToken(User));
+    const userRepo = testSetup.app.get<Repository<User>>(
+      getRepositoryToken(User),
+    );
     const passwordService = testSetup.app.get(PasswordService);
 
     const hashedPassword = await passwordService.hash(testUser.password);
@@ -55,9 +61,10 @@ describe('AppController (e2e)', () => {
       .post('/auth/login')
       .send({ email: testUser.email, password: testUser.password });
 
+    const { accessToken } = response.body as LoginResponse;
     const decoded = testSetup.app
       .get(JwtService)
-      .verify(response.body.accessToken);
+      .verify<AuthRequest['user']>(accessToken);
 
     expect(decoded.roles).toBeDefined();
     expect(decoded.roles).toContain(Role.ADMIN);
@@ -68,9 +75,10 @@ describe('AppController (e2e)', () => {
       .send(testUser)
       .expect(201)
       .expect((res) => {
-        expect(res.body.email).toBe(testUser.email);
-        expect(res.body.name).toBe(testUser.name);
-        expect(res.body).not.toHaveProperty('password');
+        const body = res.body as User;
+        expect(body.email).toBe(testUser.email);
+        expect(body.name).toBe(testUser.name);
+        expect(body).not.toHaveProperty('password');
       });
   });
 
@@ -95,7 +103,7 @@ describe('AppController (e2e)', () => {
       .send({ email: testUser.email, password: testUser.password });
 
     expect(response.status).toBe(201);
-    expect(response.body.accessToken).toBeDefined();
+    expect((response.body as LoginResponse).accessToken).toBeDefined();
   });
 
   it('/auth/profile (GET)', async () => {
@@ -107,20 +115,23 @@ describe('AppController (e2e)', () => {
       .post('/auth/login')
       .send({ email: testUser.email, password: testUser.password });
 
-    const token = response.body.accessToken;
+    const { accessToken } = response.body as LoginResponse;
 
     return request(testSetup.app.getHttpServer())
       .get('/auth/profile')
-      .set('Authorization', `Bearer ${token}`)
+      .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((res) => {
-        expect(res.body.email).toBe(testUser.email);
-        expect(res.body.name).toBe(testUser.name);
-        expect(res.body).not.toHaveProperty('password');
+        const body = res.body as User;
+        expect(body.email).toBe(testUser.email);
+        expect(body.name).toBe(testUser.name);
+        expect(body).not.toHaveProperty('password');
       });
   });
   it('/auth/admin (GET) - admin access', async () => {
-    const userRepo = testSetup.app.get(getRepositoryToken(User));
+    const userRepo = testSetup.app.get<Repository<User>>(
+      getRepositoryToken(User),
+    );
 
     const passwordService = testSetup.app.get(PasswordService);
 
@@ -134,13 +145,15 @@ describe('AppController (e2e)', () => {
       .post('/auth/login')
       .send({ email: testUser.email, password: testUser.password });
 
-    const token = response.body.accessToken;
+    const { accessToken } = response.body as LoginResponse;
     await request(testSetup.app.getHttpServer())
       .get('/auth/admin')
-      .set('Authorization', `Bearer ${token}`)
+      .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((res) => {
-        expect(res.body.message).toBe('This is for admins only!');
+        expect((res.body as AdminResponse).message).toBe(
+          'This is for admins only!',
+        );
       });
   });
   it('/auth/admin (GET) - regular user denied', async () => {
@@ -152,11 +165,11 @@ describe('AppController (e2e)', () => {
       .post('/auth/login')
       .send({ email: testUser.email, password: testUser.password });
 
-    const token = response.body.accessToken;
+    const { accessToken } = response.body as LoginResponse;
 
     return request(testSetup.app.getHttpServer())
       .get('/auth/admin')
-      .set('Authorization', `Bearer ${token}`)
+      .set('Authorization', `Bearer ${accessToken}`)
       .expect(403);
   });
   it('/auth/register (POST) - attempting to register as an admin', async () => {
@@ -169,7 +182,7 @@ describe('AppController (e2e)', () => {
       .send(userAdmin)
       .expect(201)
       .expect((res) => {
-        expect(res.body.roles).toEqual([Role.USER]);
+        expect((res.body as User).roles).toEqual([Role.USER]);
       });
   });
 });
