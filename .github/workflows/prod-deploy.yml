@@ -4,7 +4,23 @@ on:
   workflow_dispatch:
 
 jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refuse to deploy from a non-main ref
+        run: |
+          if [ "${{ github.ref }}" != "refs/heads/main" ]; then
+            echo "::error::Production deploys are allowed only from 'main' (got ${{ github.ref }})"
+            exit 1
+          fi
+
+  ci:
+    needs: guard
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+
   deploy:
+    needs: [guard, ci]
     uses: ./.github/workflows/deploy.yml
     with:
       runner_label: prod
