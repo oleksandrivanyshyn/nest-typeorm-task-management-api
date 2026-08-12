@@ -10,6 +10,31 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: tasks_e2e
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_DATABASE: tasks_e2e
+      DB_SYNC: 0
+      DB_SSL: false
+      JWT_TOKEN: ci-test-secret-not-used-at-runtime
+      JWT_EXPIRES_IN: 60m
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,5 +48,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Lint
+        run: npm run lint:check
+
+      - name: Build
+        run: npm run build
+
       - name: Unit tests
         run: npm test
+
+      - name: E2E tests
+        run: npm run test:e2e
